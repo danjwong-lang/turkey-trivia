@@ -1,16 +1,25 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ref, get, set } from 'firebase/database';
 import { database } from '@/lib/firebase';
 
 export default function JoinRoom() {
+  const searchParams = useSearchParams();
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [error, setError] = useState('');
   const [joining, setJoining] = useState(false);
   const router = useRouter();
+
+  // Auto-fill room code if coming from QR code
+  useEffect(() => {
+    const codeFromUrl = searchParams.get('code');
+    if (codeFromUrl) {
+      setRoomCode(codeFromUrl.toUpperCase());
+    }
+  }, [searchParams]);
 
   const joinRoom = async () => {
     if (!roomCode.trim() || !playerName.trim()) {
@@ -58,7 +67,7 @@ export default function JoinRoom() {
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-gray-800 mb-4">🦃</h1>
           <h2 className="text-3xl font-bold text-gray-800 mb-2">Join Game</h2>
-          <p className="text-gray-600">Enter the room code to play</p>
+          <p className="text-gray-600">Enter your name to play</p>
         </div>
 
         <div className="space-y-4">

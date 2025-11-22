@@ -1,9 +1,10 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ref, onValue, update, get } from 'firebase/database';
 import { database } from '@/lib/firebase';
+import { QRCodeCanvas } from 'qrcode.react';
 
 interface Player {
   id: string;
@@ -37,6 +38,7 @@ export default function HostRoom() {
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(15);
   const [showResults, setShowResults] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Load room data
   useEffect(() => {
@@ -69,24 +71,43 @@ export default function HostRoom() {
     loadQuestions();
   }, []);
 
-  // Timer countdown
+  // Timer countdown and music
   useEffect(() => {
     if (room?.status === 'active' && !showResults && room.questionStartTime) {
+      // Start Jeopardy music
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(e => console.log('Audio play failed:', e));
+      }
+
       const interval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - room.questionStartTime!) / 1000);
         const remaining = Math.max(15 - elapsed, 0);
         setTimeLeft(remaining);
 
-      if (remaining === 0) {
-  setShowResults(true);
-  // Auto-advance after 5 seconds of showing results
-  setTimeout(() => {
-    nextQuestion();
-  }, 5000);
-}
+        if (remaining === 0) {
+          // Stop music
+          if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+          }
+          
+          setShowResults(true);
+          // Auto-advance after 5 seconds of showing results
+          setTimeout(() => {
+            nextQuestion();
+          }, 5000);
+        }
       }, 100);
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+        // Stop music on cleanup
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+      };
     }
   }, [room?.status, room?.questionStartTime, showResults]);
 
@@ -156,6 +177,9 @@ export default function HostRoom() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-500 via-red-500 to-amber-600 p-8">
+      {/* Audio element for Jeopardy music */}
+      <audio ref={audioRef} src="/jeopardy.mp3" />
+      
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -170,14 +194,38 @@ export default function HostRoom() {
         {/* Lobby */}
         {room.status === 'lobby' && (
           <div className="bg-white rounded-xl shadow-lg p-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-6">Players in Lobby</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Join the Game!</h2>
             
+            {/* QR Code */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="bg-white p-6 rounded-xl shadow-lg border-4 border-orange-500">
+                <QRCodeCanvas
+  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join?code=${roomCode}`}
+  size={200}
+  level="H"
+/>
+              </div>
+              <p className="text-gray-600 mt-4 text-center">
+                Scan QR code with your phone camera
+              </p>
+              <div className="text-center mt-4">
+                <p className="text-gray-600 text-sm mb-2">Or go to:</p>
+                <p className="text-orange-600 font-bold text-xl">
+                  {typeof window !== 'undefined' ? window.location.origin : ''}/join
+                </p>
+                <p className="text-gray-600 text-sm mt-2">Room Code:</p>
+                <p className="text-5xl font-bold text-orange-600 tracking-wider">{roomCode}</p>
+              </div>
+            </div>
+
+            {/* Players List */}
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Players Joined:</h3>
             {players.length === 0 ? (
-              <p className="text-gray-500 text-xl text-center py-12">
+              <p className="text-gray-500 text-xl text-center py-8">
                 Waiting for players to join...
               </p>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
                 {players.map((player) => (
                   <div
                     key={player.id}
@@ -193,7 +241,7 @@ export default function HostRoom() {
             {players.length > 0 && (
               <button 
                 onClick={startGame}
-                className="mt-8 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
+                className="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
               >
                 Start Game ({players.length} players)
               </button>

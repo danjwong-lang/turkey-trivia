@@ -12,10 +12,13 @@ const firebaseConfig = {
   appId: "1:1087572621696:web:01eace943cdd9dc066e965"
 };
 
+
+
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 
 const questions = [
+  // ORIGINAL 90 QUESTIONS (q1-q90)
   // STEM - 10 questions
   { id: 'q1', category: 'stem', text: 'What gas do plants absorb?', answers: { a: 'CO2', b: 'Oxygen', c: 'Nitrogen', d: 'Hydrogen' }, correct: 'a' },
   { id: 'q2', category: 'stem', text: 'What is the largest planet in our solar system?', answers: { a: 'Earth', b: 'Mars', c: 'Jupiter', d: 'Saturn' }, correct: 'c' },
@@ -112,7 +115,7 @@ const questions = [
   { id: 'q79', category: 'history', text: 'What ancient wonder still stands today?', answers: { a: 'Colossus of Rhodes', b: 'Hanging Gardens', c: 'Great Pyramid of Giza', d: 'Lighthouse of Alexandria' }, correct: 'c' },
   { id: 'q80', category: 'history', text: 'What year did the Titanic sink?', answers: { a: '1910', b: '1911', c: '1912', d: '1913' }, correct: 'c' },
 
-  // Thanksgiving - 5 questions (keeping original)
+  // Thanksgiving - 5 questions
   { id: 'q81', category: 'thanksgiving', text: 'How fast can wild turkeys fly?', answers: { a: '35 mph', b: '45 mph', c: '55 mph', d: '65 mph' }, correct: 'c' },
   { id: 'q82', category: 'thanksgiving', text: 'What year was the first Thanksgiving?', answers: { a: '1591', b: '1611', c: '1621', d: '1641' }, correct: 'c' },
   { id: 'q83', category: 'thanksgiving', text: 'Most popular Thanksgiving pie?', answers: { a: 'Apple', b: 'Pecan', c: 'Pumpkin', d: 'Cherry' }, correct: 'c' },
@@ -125,17 +128,109 @@ const questions = [
   { id: 'q88', category: 'gaming', text: 'What does "NPC" stand for in gaming?', answers: { a: 'New Player Character', b: 'Non-Playable Character', c: 'Next Player Coming', d: 'Network Player Code' }, correct: 'b' },
   { id: 'q89', category: 'gaming', text: 'What year was Fortnite released?', answers: { a: '2015', b: '2016', c: '2017', d: '2018' }, correct: 'c' },
   { id: 'q90', category: 'gaming', text: 'Who is the main character in The Legend of Zelda?', answers: { a: 'Zelda', b: 'Link', c: 'Ganon', d: 'Mario' }, correct: 'b' },
+
+  // NEW 70 QUESTIONS (q91-q160)
+  
+  // Geography - 10 questions
+  { id: 'q91', category: 'geography', text: 'What is the capital of France?', answers: { a: 'London', b: 'Berlin', c: 'Paris', d: 'Rome' }, correct: 'c' },
+  { id: 'q92', category: 'geography', text: 'Which country has the most population?', answers: { a: 'United States', b: 'China', c: 'India', d: 'Russia' }, correct: 'c' },
+  { id: 'q93', category: 'geography', text: 'What is the largest ocean on Earth?', answers: { a: 'Atlantic', b: 'Indian', c: 'Arctic', d: 'Pacific' }, correct: 'd' },
+  { id: 'q94', category: 'geography', text: 'What country is known as the "Land of the Rising Sun"?', answers: { a: 'China', b: 'Japan', c: 'Thailand', d: 'Vietnam' }, correct: 'b' },
+  { id: 'q95', category: 'geography', text: 'What is the longest river in the world?', answers: { a: 'Amazon', b: 'Nile', c: 'Mississippi', d: 'Yangtze' }, correct: 'b' },
+  { id: 'q96', category: 'geography', text: 'Which continent is the Sahara Desert on?', answers: { a: 'Asia', b: 'Australia', c: 'Africa', d: 'South America' }, correct: 'c' },
+  { id: 'q97', category: 'geography', text: 'What is the smallest country in the world?', answers: { a: 'Monaco', b: 'Vatican City', c: 'Liechtenstein', d: 'San Marino' }, correct: 'b' },
+  { id: 'q98', category: 'geography', text: 'How many states are in the United States?', answers: { a: '48', b: '50', c: '52', d: '51' }, correct: 'b' },
+  { id: 'q99', category: 'geography', text: 'What is the tallest mountain in the world?', answers: { a: 'K2', b: 'Kilimanjaro', c: 'Mount Everest', d: 'Denali' }, correct: 'c' },
+  { id: 'q100', category: 'geography', text: 'What country is the Great Wall located in?', answers: { a: 'India', b: 'China', c: 'Japan', d: 'Mongolia' }, correct: 'b' },
+
+  // Animals & Nature - 10 questions
+  { id: 'q101', category: 'animals', text: 'What is the largest mammal on Earth?', answers: { a: 'Elephant', b: 'Blue Whale', c: 'Giraffe', d: 'Polar Bear' }, correct: 'b' },
+  { id: 'q102', category: 'animals', text: 'How many legs does a spider have?', answers: { a: '6', b: '8', c: '10', d: '12' }, correct: 'b' },
+  { id: 'q103', category: 'animals', text: 'What is the only mammal that can fly?', answers: { a: 'Flying squirrel', b: 'Bat', c: 'Sugar glider', d: 'Lemur' }, correct: 'b' },
+  { id: 'q104', category: 'animals', text: 'What do pandas mainly eat?', answers: { a: 'Fish', b: 'Meat', c: 'Bamboo', d: 'Berries' }, correct: 'c' },
+  { id: 'q105', category: 'animals', text: 'What is a baby kangaroo called?', answers: { a: 'Cub', b: 'Joey', c: 'Pup', d: 'Kit' }, correct: 'b' },
+  { id: 'q106', category: 'animals', text: 'How many hearts does an octopus have?', answers: { a: '1', b: '2', c: '3', d: '4' }, correct: 'c' },
+  { id: 'q107', category: 'animals', text: 'What bird is known for being unable to fly?', answers: { a: 'Penguin', b: 'Eagle', c: 'Parrot', d: 'Falcon' }, correct: 'a' },
+  { id: 'q108', category: 'animals', text: 'What animal is known for changing colors?', answers: { a: 'Frog', b: 'Snake', c: 'Chameleon', d: 'Lizard' }, correct: 'c' },
+  { id: 'q109', category: 'animals', text: 'What is the fastest bird in the world?', answers: { a: 'Eagle', b: 'Hawk', c: 'Peregrine Falcon', d: 'Hummingbird' }, correct: 'c' },
+  { id: 'q110', category: 'animals', text: 'What animal never sleeps?', answers: { a: 'Shark', b: 'Dolphin', c: 'Whale', d: 'Bullfrog' }, correct: 'd' },
+
+  // Brands & Logos - 8 questions
+  { id: 'q111', category: 'brands', text: 'What company has a swoosh logo?', answers: { a: 'Adidas', b: 'Nike', c: 'Puma', d: 'Reebok' }, correct: 'b' },
+  { id: 'q112', category: 'brands', text: 'What is the most valuable company in the world (2024)?', answers: { a: 'Microsoft', b: 'Apple', c: 'Amazon', d: 'Google' }, correct: 'b' },
+  { id: 'q113', category: 'brands', text: 'What fast food chain has golden arches?', answers: { a: 'Burger King', b: 'Wendy\'s', c: 'McDonald\'s', d: 'KFC' }, correct: 'c' },
+  { id: 'q114', category: 'brands', text: 'What brand makes the iPhone?', answers: { a: 'Samsung', b: 'Google', c: 'Apple', d: 'Microsoft' }, correct: 'c' },
+  { id: 'q115', category: 'brands', text: 'What company owns Instagram?', answers: { a: 'Twitter', b: 'Google', c: 'Meta (Facebook)', d: 'Snapchat' }, correct: 'c' },
+  { id: 'q116', category: 'brands', text: 'What logo has a mermaid?', answers: { a: 'Dunkin', b: 'Starbucks', c: 'Costa', d: 'Tim Hortons' }, correct: 'b' },
+  { id: 'q117', category: 'brands', text: 'What car brand has four rings?', answers: { a: 'BMW', b: 'Mercedes', c: 'Audi', d: 'Volkswagen' }, correct: 'c' },
+  { id: 'q118', category: 'brands', text: 'What soda is red and white?', answers: { a: 'Pepsi', b: 'Sprite', c: 'Coca-Cola', d: 'Dr Pepper' }, correct: 'c' },
+
+  // Slang & Internet Culture - 8 questions
+  { id: 'q119', category: 'slang', text: 'What does "slay" mean?', answers: { a: 'To sleep', b: 'To do something amazing', c: 'To fail', d: 'To eat' }, correct: 'b' },
+  { id: 'q120', category: 'slang', text: 'What does "FR" stand for?', answers: { a: 'French', b: 'Friday', c: 'For Real', d: 'From' }, correct: 'c' },
+  { id: 'q121', category: 'slang', text: 'What does "NPC" mean in slang?', answers: { a: 'Nice Person Club', b: 'Someone with no personality', c: 'New Phone Call', d: 'Not Perfect Character' }, correct: 'b' },
+  { id: 'q122', category: 'slang', text: 'What does "mid" mean?', answers: { a: 'Amazing', b: 'Middle/Average', c: 'Terrible', d: 'Expensive' }, correct: 'b' },
+  { id: 'q123', category: 'slang', text: 'What does "bussin" mean?', answers: { a: 'Broken', b: 'Really good', c: 'Tired', d: 'Loud' }, correct: 'b' },
+  { id: 'q124', category: 'slang', text: 'What does "cap" mean?', answers: { a: 'Hat', b: 'Truth', c: 'Lie', d: 'Money' }, correct: 'c' },
+  { id: 'q125', category: 'slang', text: 'What does "simp" mean?', answers: { a: 'Simple', b: 'Someone who tries too hard to impress', c: 'Simulation', d: 'Sympathy' }, correct: 'b' },
+  { id: 'q126', category: 'slang', text: 'What is a "sigma"?', answers: { a: 'A math symbol', b: 'A lone wolf personality type', c: 'A dance move', d: 'A type of food' }, correct: 'b' },
+
+  // More Movies - 8 questions
+  { id: 'q127', category: 'movies', text: 'What movie features "I\'ll be back"?', answers: { a: 'Terminator', b: 'Die Hard', c: 'Predator', d: 'Rocky' }, correct: 'a' },
+  { id: 'q128', category: 'movies', text: 'Who plays Katniss in The Hunger Games?', answers: { a: 'Emma Stone', b: 'Jennifer Lawrence', c: 'Emma Watson', d: 'Kristen Stewart' }, correct: 'b' },
+  { id: 'q129', category: 'movies', text: 'What year was Toy Story released?', answers: { a: '1993', b: '1995', c: '1997', d: '1999' }, correct: 'b' },
+  { id: 'q130', category: 'movies', text: 'Who directed Jurassic Park?', answers: { a: 'George Lucas', b: 'James Cameron', c: 'Steven Spielberg', d: 'Peter Jackson' }, correct: 'c' },
+  { id: 'q131', category: 'movies', text: 'What is the name of Thor\'s hammer?', answers: { a: 'Stormbreaker', b: 'Mjolnir', c: 'Excalibur', d: 'Gungnir' }, correct: 'b' },
+  { id: 'q132', category: 'movies', text: 'What movie has "May the Force be with you"?', answers: { a: 'Star Trek', b: 'Star Wars', c: 'Guardians of the Galaxy', d: 'Avatar' }, correct: 'b' },
+  { id: 'q133', category: 'movies', text: 'Who plays Jack in Titanic?', answers: { a: 'Brad Pitt', b: 'Tom Cruise', c: 'Leonardo DiCaprio', d: 'Matt Damon' }, correct: 'c' },
+  { id: 'q134', category: 'movies', text: 'What animated movie features Elsa and Anna?', answers: { a: 'Tangled', b: 'Moana', c: 'Frozen', d: 'Brave' }, correct: 'c' },
+
+  // More TV Shows - 6 questions
+  { id: 'q135', category: 'tv', text: 'What show has "That\'s what she said"?', answers: { a: 'Parks and Rec', b: 'The Office', c: 'Brooklyn Nine-Nine', d: '30 Rock' }, correct: 'b' },
+  { id: 'q136', category: 'tv', text: 'What show features the character Walter White?', answers: { a: 'The Sopranos', b: 'Breaking Bad', c: 'Better Call Saul', d: 'Ozark' }, correct: 'b' },
+  { id: 'q137', category: 'tv', text: 'What reality show features "the tribe has spoken"?', answers: { a: 'The Bachelor', b: 'Big Brother', c: 'Survivor', d: 'The Amazing Race' }, correct: 'c' },
+  { id: 'q138', category: 'tv', text: 'What anime is about ninjas in Hidden Leaf Village?', answers: { a: 'One Piece', b: 'Naruto', c: 'Dragon Ball Z', d: 'Bleach' }, correct: 'b' },
+  { id: 'q139', category: 'tv', text: 'What show has "Winter is coming"?', answers: { a: 'Vikings', b: 'The Witcher', c: 'Game of Thrones', d: 'The Last Kingdom' }, correct: 'c' },
+  { id: 'q140', category: 'tv', text: 'What show features the character Eleven?', answers: { a: 'The Umbrella Academy', b: 'Stranger Things', c: 'Wednesday', d: 'Riverdale' }, correct: 'b' },
+
+  // More Music - 6 questions
+  { id: 'q141', category: 'music', text: 'Who sang "Shape of You"?', answers: { a: 'Justin Bieber', b: 'Ed Sheeran', c: 'Shawn Mendes', d: 'Charlie Puth' }, correct: 'b' },
+  { id: 'q142', category: 'music', text: 'What band sang "Bohemian Rhapsody"?', answers: { a: 'The Beatles', b: 'Led Zeppelin', c: 'Queen', d: 'The Rolling Stones' }, correct: 'c' },
+  { id: 'q143', category: 'music', text: 'Who is known as "Queen Bey"?', answers: { a: 'Rihanna', b: 'Beyoncé', c: 'Ariana Grande', d: 'Lady Gaga' }, correct: 'b' },
+  { id: 'q144', category: 'music', text: 'What rapper\'s real name is Marshall Mathers?', answers: { a: 'Drake', b: '50 Cent', c: 'Eminem', d: 'Snoop Dogg' }, correct: 'c' },
+  { id: 'q145', category: 'music', text: 'Who sang "Rolling in the Deep"?', answers: { a: 'Adele', b: 'Amy Winehouse', c: 'Alicia Keys', d: 'Kelly Clarkson' }, correct: 'a' },
+  { id: 'q146', category: 'music', text: 'What K-pop group has "Dynamite"?', answers: { a: 'Blackpink', b: 'BTS', c: 'EXO', d: 'Twice' }, correct: 'b' },
+
+  // More Pop Culture - 6 questions
+  { id: 'q147', category: 'culture', text: 'What app features a white bird logo?', answers: { a: 'Facebook', b: 'X (Twitter)', c: 'Instagram', d: 'TikTok' }, correct: 'b' },
+  { id: 'q148', category: 'culture', text: 'What is Mr. Beast known for?', answers: { a: 'Gaming', b: 'Music', c: 'Expensive challenges/giveaways', d: 'Cooking' }, correct: 'c' },
+  { id: 'q149', category: 'culture', text: 'What show made "The Renegade" dance famous?', answers: { a: 'YouTube', b: 'TikTok', c: 'Instagram', d: 'Snapchat' }, correct: 'b' },
+  { id: 'q150', category: 'culture', text: 'Who said "I\'m gonna make him an offer he can\'t refuse"?', answers: { a: 'Scarface', b: 'The Godfather', c: 'Goodfellas', d: 'Casino' }, correct: 'b' },
+  { id: 'q151', category: 'culture', text: 'What platform is known for short videos under 1 minute?', answers: { a: 'YouTube', b: 'Vine (RIP)', c: 'TikTok', d: 'Both B and C' }, correct: 'd' },
+  { id: 'q152', category: 'culture', text: 'Who hosted the Oscars in 2022?', answers: { a: 'Kevin Hart', b: 'Chris Rock', c: 'No host', d: 'Amy Schumer, Wanda Sykes, Regina Hall' }, correct: 'd' },
+
+  // More Sports - 4 questions
+  { id: 'q153', category: 'sports', text: 'What sport is Lionel Messi famous for?', answers: { a: 'Basketball', b: 'Soccer', c: 'Tennis', d: 'Golf' }, correct: 'b' },
+  { id: 'q154', category: 'sports', text: 'How many rings are on the Olympic flag?', answers: { a: '3', b: '4', c: '5', d: '6' }, correct: 'c' },
+  { id: 'q155', category: 'sports', text: 'What country hosted the 2024 Summer Olympics?', answers: { a: 'Japan', b: 'France', c: 'USA', d: 'Brazil' }, correct: 'b' },
+  { id: 'q156', category: 'sports', text: 'What is the maximum score in a single frame of bowling?', answers: { a: '10', b: '20', c: '30', d: '50' }, correct: 'c' },
+
+  // More STEM - 4 questions
+  { id: 'q157', category: 'stem', text: 'What does Wi-Fi stand for?', answers: { a: 'Wireless Fidelity', b: 'Wide Fiber', c: 'Wired Frequency', d: 'It doesn\'t stand for anything' }, correct: 'd' },
+  { id: 'q158', category: 'stem', text: 'How many sides does a hexagon have?', answers: { a: '5', b: '6', c: '7', d: '8' }, correct: 'b' },
+  { id: 'q159', category: 'stem', text: 'What is the boiling point of water in Celsius?', answers: { a: '50°C', b: '75°C', c: '100°C', d: '212°C' }, correct: 'c' },
+  { id: 'q160', category: 'stem', text: 'What planet is known as the Red Planet?', answers: { a: 'Venus', b: 'Mars', c: 'Jupiter', d: 'Saturn' }, correct: 'b' },
 ];
 
 async function addQuestions() {
-  console.log('Adding 80 questions to Firebase...');
+  console.log('Adding 150 questions to Firebase...');
   
   for (const question of questions) {
     await set(ref(database, `questions/${question.id}`), question);
     console.log(`Added: ${question.text}`);
   }
   
-  console.log('✅ All 80 questions added successfully!');
+  console.log('✅ All 150 questions added successfully!');
   process.exit(0);
 }
 
