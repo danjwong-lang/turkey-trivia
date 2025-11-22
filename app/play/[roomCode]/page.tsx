@@ -95,16 +95,19 @@ export default function PlayRoom() {
         (b.answers?.[room.currentQuestion]?.timestamp || 0)
       );
 
-    let points = 0;
-    if (isCorrect) {
-      const correctAnswers = answersForThisQuestion.filter(
-        p => p.answers?.[room.currentQuestion]?.correct
-      );
-      const position = correctAnswers.length;
-      
-      // Award points: 1000, 800, 600, 400, 200
-      points = Math.max(1000 - (position * 200), 200);
-    }
+let points = 0;
+if (isCorrect) {
+  const correctAnswers = answersForThisQuestion.filter(
+    p => p.answers?.[room.currentQuestion]?.correct
+  );
+  const position = correctAnswers.length;
+  
+  // Award points: 1st=100, 2nd=25, 3rd=10, 4th+=0
+  if (position === 0) points = 100;      // First
+  else if (position === 1) points = 25;  // Second
+  else if (position === 2) points = 10;  // Third
+  else points = 0;                        // Fourth+
+}
 
     // Update player's answer and score
     const playerRef = ref(database, `rooms/${roomCode}/players/${playerId}`);

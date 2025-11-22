@@ -26,6 +26,7 @@ interface Room {
   currentQuestion: number;
   players: Record<string, Player>;
   selectedQuestions?: string[];
+  questionStartTime?: number;
 }
 
 export default function HostRoom() {
@@ -34,6 +35,8 @@ export default function HostRoom() {
   const [room, setRoom] = useState<Room | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(15);
+  const [showResults, setShowResults] = useState(false);
 
   // Load room data
   useEffect(() => {
@@ -43,13 +46,14 @@ export default function HostRoom() {
       const data = snapshot.val();
       if (data) {
         setRoom(data);
+        setShowResults(false);
       }
     });
 
     return () => unsubscribe();
   }, [roomCode]);
 
-  // Load questions when game starts
+  // Load questions
   useEffect(() => {
     const loadQuestions = async () => {
       const questionsRef = ref(database, 'questions');
@@ -65,6 +69,27 @@ export default function HostRoom() {
     loadQuestions();
   }, []);
 
+  // Timer countdown
+  useEffect(() => {
+    if (room?.status === 'active' && !showResults && room.questionStartTime) {
+      const interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - room.questionStartTime!) / 1000);
+        const remaining = Math.max(15 - elapsed, 0);
+        setTimeLeft(remaining);
+
+      if (remaining === 0) {
+  setShowResults(true);
+  // Auto-advance after 5 seconds of showing results
+  setTimeout(() => {
+    nextQuestion();
+  }, 5000);
+}
+      }, 100);
+
+      return () => clearInterval(interval);
+    }
+  }, [room?.status, room?.questionStartTime, showResults]);
+
   const startGame = async () => {
     if (!questions.length) return;
 
@@ -75,7 +100,8 @@ export default function HostRoom() {
     await update(ref(database, `rooms/${roomCode}`), {
       status: 'active',
       currentQuestion: 0,
-      selectedQuestions
+      selectedQuestions,
+      questionStartTime: Date.now()
     });
   };
 
@@ -91,8 +117,11 @@ export default function HostRoom() {
       });
     } else {
       await update(ref(database, `rooms/${roomCode}`), {
-        currentQuestion: nextQuestionIndex
+        currentQuestion: nextQuestionIndex,
+        questionStartTime: Date.now()
       });
+      setShowResults(false);
+      setTimeLeft(15);
     }
   };
 
@@ -107,6 +136,23 @@ export default function HostRoom() {
   const currentQuestion = room.selectedQuestions && room.selectedQuestions[room.currentQuestion]
     ? questions.find(q => q.id === room.selectedQuestions![room.currentQuestion])
     : null;
+
+  // Get players who answered this question
+  const playersWhoAnswered = currentQuestion ? players
+    .filter(p => p.answers?.[room.currentQuestion])
+    .map(p => ({
+      ...p,
+      answerData: p.answers![room.currentQuestion]
+    }))
+    : [];
+
+  // Separate correct and incorrect answers
+  const correctAnswers = playersWhoAnswered
+    .filter(p => p.answerData.correct)
+    .sort((a, b) => a.answerData.timestamp - b.answerData.timestamp);
+
+  const wrongAnswers = playersWhoAnswered
+    .filter(p => !p.answerData.correct);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-500 via-red-500 to-amber-600 p-8">
@@ -156,8 +202,30 @@ export default function HostRoom() {
         )}
 
         {/* Active Game - Question Display */}
-        {room.status === 'active' && currentQuestion && (
+        {room.status === 'active' && currentQuestion && !showResults && (
           <div>
+            {/* Timer */}
+            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="text-2xl font-bold text-gray-800">
+                  Time Remaining:
+                </div>
+                <div className={`text-6xl font-bold ${
+                  timeLeft <= 5 ? 'text-red-600 animate-pulse' : 'text-orange-600'
+                }`}>
+                  {timeLeft}s
+                </div>
+              </div>
+              <div className="mt-4 bg-gray-200 rounded-full h-4 overflow-hidden">
+                <div 
+                  className={`h-full transition-all duration-1000 ${
+                    timeLeft <= 5 ? 'bg-red-500' : 'bg-orange-500'
+                  }`}
+                  style={{ width: `${(timeLeft / 15) * 100}%` }}
+                />
+              </div>
+            </div>
+
             {/* Question Card */}
             <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
               <div className="text-center mb-6">
@@ -189,11 +257,93 @@ export default function HostRoom() {
                   </div>
                 ))}
               </div>
+
+              {/* Who's Answered */}
+              <div className="mt-8 text-center">
+                <div className="text-gray-600 text-lg">
+                  {playersWhoAnswered.length} of {players.length} answered
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Results After Question */}
+        {room.status === 'active' && currentQuestion && showResults && (
+          <div>
+            {/* Correct Answer */}
+            <div className="bg-white rounded-xl shadow-lg p-8 mb-6">
+              <div className="text-center mb-8">
+                <div className="text-6xl mb-4">✅</div>
+                <h3 className="text-3xl font-bold text-gray-800 mb-2">
+                  Correct Answer: {currentQuestion.correct.toUpperCase()}
+                </h3>
+                <p className="text-xl text-gray-600">
+                  {currentQuestion.answers[currentQuestion.correct]}
+                </p>
+              </div>
+
+              {/* Correct Answers - Speed Ranking */}
+              {correctAnswers.length > 0 && (
+                <div className="mb-8">
+                  <h4 className="text-2xl font-bold text-green-700 mb-4 text-center">
+                    ✅ Correct Answers
+                  </h4>
+                  <div className="max-w-2xl mx-auto space-y-3">
+                    {correctAnswers.map((player, index) => (
+                      <div
+                        key={player.id}
+                        className={`flex items-center justify-between p-6 rounded-lg ${
+                          index === 0 ? 'bg-green-200 border-2 border-green-400' :
+                          index === 1 ? 'bg-green-100' :
+                          'bg-green-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div className="text-4xl">
+                            {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '✓'}
+                          </div>
+                          <div>
+                            <div className="text-2xl font-bold text-gray-800">
+                              {index === 0 ? '🏆 Winner: ' : index === 1 ? 'Close second: ' : index === 2 ? 'Third place: ' : ''}
+                              {player.name}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-3xl font-bold text-green-700">
+                          +{player.answerData.points}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Wrong Answers */}
+              {wrongAnswers.length > 0 && (
+                <div>
+                  <h4 className="text-xl font-bold text-red-700 mb-3 text-center">
+                    ❌ Incorrect
+                  </h4>
+                  <div className="max-w-2xl mx-auto">
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {wrongAnswers.map((player) => (
+                        <div
+                          key={player.id}
+                          className="bg-red-50 text-red-800 px-4 py-2 rounded-lg font-semibold"
+                        >
+                          {player.name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Leaderboard */}
+            {/* Overall Leaderboard */}
             <div className="bg-white rounded-xl shadow-lg p-8">
-              <h3 className="text-2xl font-bold text-gray-800 mb-4">Leaderboard</h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-4">Overall Standings</h3>
               <div className="space-y-2">
                 {sortedPlayers.map((player, index) => (
                   <div
@@ -218,7 +368,7 @@ export default function HostRoom() {
                 onClick={nextQuestion}
                 className="mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
               >
-                Next Question →
+                {room.currentQuestion >= 19 ? 'Show Final Results' : 'Next Question →'}
               </button>
             </div>
           </div>
@@ -245,7 +395,10 @@ export default function HostRoom() {
                     'bg-blue-100 text-blue-900'
                   }`}
                 >
-                  <div className="font-bold">#{index + 1} {player.name}</div>
+                  <div className="font-bold">
+                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                    {' '}{player.name}
+                  </div>
                   <div className="font-bold">{player.score} pts</div>
                 </div>
               ))}
