@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ref, get, set } from 'firebase/database';
 import { database } from '@/lib/firebase';
 
 const MAX_PLAYERS = 15;
 
-export default function JoinRoom() {
+function JoinRoomContent() {
   const searchParams = useSearchParams();
   const [roomCode, setRoomCode] = useState('');
   const [playerName, setPlayerName] = useState('');
@@ -130,5 +130,17 @@ export default function JoinRoom() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function JoinRoom() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-orange-500 via-red-500 to-amber-600 flex items-center justify-center">
+        <div className="text-white text-2xl">Loading...</div>
+      </div>
+    }>
+      <JoinRoomContent />
+    </Suspense>
   );
 }
