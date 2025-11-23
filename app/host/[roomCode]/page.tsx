@@ -364,7 +364,7 @@ export default function HostRoom() {
                   Correct Answer: {currentQuestion.correct.toUpperCase()}
                 </h3>
                 <p className="text-xl text-gray-600">
-                  {currentQuestion.answers[currentQuestion.correct]}
+                  {currentQuestion.answers[currentQuestion.correct as 'a' | 'b' | 'c' | 'd']}
                 </p>
               </div>
 
