@@ -38,7 +38,7 @@ export default function PlayRoom() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(20);
   const correctSoundRef = useRef<HTMLAudioElement | null>(null);
   const wrongSoundRef = useRef<HTMLAudioElement | null>(null);
 
@@ -83,7 +83,7 @@ export default function PlayRoom() {
     if (room?.status === 'active' && !hasAnswered && room.questionStartTime) {
       const interval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - room.questionStartTime!) / 1000);
-        const remaining = Math.max(30 - elapsed, 0);
+        const remaining = Math.max(20 - elapsed, 0);
         setTimeLeft(remaining);
       }, 100);
 
@@ -217,7 +217,7 @@ export default function PlayRoom() {
                     className={`h-full transition-all duration-1000 ${
                       timeLeft <= 5 ? 'bg-red-500' : 'bg-orange-500'
                     }`}
-                    style={{ width: `${(timeLeft / 30) * 100}%` }}
+                    style={{ width: `${(timeLeft / 20) * 100}%` }}
                   />
                 </div>
               </div>

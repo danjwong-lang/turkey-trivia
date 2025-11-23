@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
@@ -39,7 +39,7 @@ export default function HostRoom() {
   const [room, setRoom] = useState<Room | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(20);
   const [showResults, setShowResults] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -100,7 +100,7 @@ export default function HostRoom() {
 
       const interval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - room.questionStartTime!) / 1000);
-        const remaining = Math.max(30 - elapsed, 0);
+        const remaining = Math.max(20 - elapsed, 0);
         setTimeLeft(remaining);
 
         if (remaining === 0) {
@@ -160,7 +160,7 @@ export default function HostRoom() {
         questionStartTime: Date.now()
       });
       setShowResults(false);
-      setTimeLeft(30);
+      setTimeLeft(20);
     }
   };
 
@@ -306,7 +306,7 @@ export default function HostRoom() {
                   className={`h-full transition-all duration-1000 ${
                     timeLeft <= 5 ? 'bg-red-500' : 'bg-orange-500'
                   }`}
-                  style={{ width: `${(timeLeft / 30) * 100}%` }}
+                  style={{ width: `${(timeLeft / 20) * 100}%` }}
                 />
               </div>
             </div>
