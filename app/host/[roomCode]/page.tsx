@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from 'react';
 import { ref, onValue, update, get } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { QRCodeCanvas } from 'qrcode.react';
+import Confetti from 'react-confetti';
 
 interface Player {
   id: string;
@@ -30,15 +31,32 @@ interface Room {
   questionStartTime?: number;
 }
 
+const MAX_PLAYERS = 15;
+
 export default function HostRoom() {
   const params = useParams();
   const roomCode = params.roomCode as string;
   const [room, setRoom] = useState<Room | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(30);
   const [showResults, setShowResults] = useState(false);
+  const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Get window size for confetti
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+      
+      const handleResize = () => {
+        setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+      };
+      
+      window.addEventListener('resize', handleResize);
+      return () => window.removeEventListener('resize', handleResize);
+    }
+  }, []);
 
   // Load room data
   useEffect(() => {
@@ -82,7 +100,7 @@ export default function HostRoom() {
 
       const interval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - room.questionStartTime!) / 1000);
-        const remaining = Math.max(15 - elapsed, 0);
+        const remaining = Math.max(30 - elapsed, 0);
         setTimeLeft(remaining);
 
         if (remaining === 0) {
@@ -142,7 +160,7 @@ export default function HostRoom() {
         questionStartTime: Date.now()
       });
       setShowResults(false);
-      setTimeLeft(15);
+      setTimeLeft(30);
     }
   };
 
@@ -152,6 +170,7 @@ export default function HostRoom() {
 
   const players = Object.values(room.players || {});
   const sortedPlayers = [...players].sort((a, b) => b.score - a.score);
+  const isRoomFull = players.length >= MAX_PLAYERS;
 
   // Get current question
   const currentQuestion = room.selectedQuestions && room.selectedQuestions[room.currentQuestion]
@@ -177,6 +196,16 @@ export default function HostRoom() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-500 via-red-500 to-amber-600 p-8">
+      {/* Confetti on winner screen */}
+      {room.status === 'finished' && (
+        <Confetti
+          width={windowSize.width}
+          height={windowSize.height}
+          recycle={false}
+          numberOfPieces={500}
+        />
+      )}
+      
       {/* Audio element for Jeopardy music */}
       <audio ref={audioRef} src="/jeopardy.mp3" />
       
@@ -186,7 +215,7 @@ export default function HostRoom() {
           <div className="flex justify-between items-center">
             <h1 className="text-4xl font-bold text-gray-800">Room: {roomCode}</h1>
             <div className="text-2xl font-bold text-orange-600">
-              {players.length} Player{players.length !== 1 ? 's' : ''}
+              {players.length}/{MAX_PLAYERS} Players
             </div>
           </div>
         </div>
@@ -196,14 +225,22 @@ export default function HostRoom() {
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">Join the Game!</h2>
             
+            {/* Room Full Warning */}
+            {isRoomFull && (
+              <div className="bg-red-100 border-2 border-red-400 text-red-800 px-6 py-4 rounded-xl mb-6 text-center">
+                <p className="font-bold text-xl">⚠️ Room is Full!</p>
+                <p className="text-sm mt-2">Maximum {MAX_PLAYERS} players allowed. No more players can join.</p>
+              </div>
+            )}
+            
             {/* QR Code */}
             <div className="flex flex-col items-center mb-8">
               <div className="bg-white p-6 rounded-xl shadow-lg border-4 border-orange-500">
                 <QRCodeCanvas
-  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join?code=${roomCode}`}
-  size={200}
-  level="H"
-/>
+                  value={`${typeof window !== 'undefined' ? window.location.origin : ''}/join?code=${roomCode}`}
+                  size={200}
+                  level="H"
+                />
               </div>
               <p className="text-gray-600 mt-4 text-center">
                 Scan QR code with your phone camera
@@ -269,7 +306,7 @@ export default function HostRoom() {
                   className={`h-full transition-all duration-1000 ${
                     timeLeft <= 5 ? 'bg-red-500' : 'bg-orange-500'
                   }`}
-                  style={{ width: `${(timeLeft / 15) * 100}%` }}
+                  style={{ width: `${(timeLeft / 30) * 100}%` }}
                 />
               </div>
             </div>

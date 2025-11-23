@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { ref, onValue, get, update } from 'firebase/database';
 import { database } from '@/lib/firebase';
 
@@ -26,6 +26,7 @@ interface Room {
   currentQuestion: number;
   players: Record<string, Player>;
   selectedQuestions?: string[];
+  questionStartTime?: number;
 }
 
 export default function PlayRoom() {
@@ -37,6 +38,9 @@ export default function PlayRoom() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const correctSoundRef = useRef<HTMLAudioElement | null>(null);
+  const wrongSoundRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const roomRef = ref(database, `rooms/${roomCode}`);
@@ -74,6 +78,19 @@ export default function PlayRoom() {
     loadQuestions();
   }, []);
 
+  // Countdown timer
+  useEffect(() => {
+    if (room?.status === 'active' && !hasAnswered && room.questionStartTime) {
+      const interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - room.questionStartTime!) / 1000);
+        const remaining = Math.max(30 - elapsed, 0);
+        setTimeLeft(remaining);
+      }, 100);
+
+      return () => clearInterval(interval);
+    }
+  }, [room?.status, room?.questionStartTime, hasAnswered]);
+
   const submitAnswer = async (answer: string) => {
     if (!room || !playerId || hasAnswered) return;
 
@@ -86,6 +103,13 @@ export default function PlayRoom() {
     const isCorrect = answer === question.correct;
     const timestamp = Date.now();
 
+    // Play sound effect
+    if (isCorrect && correctSoundRef.current) {
+      correctSoundRef.current.play().catch(e => console.log('Sound play failed:', e));
+    } else if (!isCorrect && wrongSoundRef.current) {
+      wrongSoundRef.current.play().catch(e => console.log('Sound play failed:', e));
+    }
+
     // Calculate points based on speed
     const players = Object.values(room.players || {});
     const answersForThisQuestion = players
@@ -95,19 +119,19 @@ export default function PlayRoom() {
         (b.answers?.[room.currentQuestion]?.timestamp || 0)
       );
 
-let points = 0;
-if (isCorrect) {
-  const correctAnswers = answersForThisQuestion.filter(
-    p => p.answers?.[room.currentQuestion]?.correct
-  );
-  const position = correctAnswers.length;
-  
-  // Award points: 1st=100, 2nd=25, 3rd=10, 4th+=0
-  if (position === 0) points = 100;      // First
-  else if (position === 1) points = 25;  // Second
-  else if (position === 2) points = 10;  // Third
-  else points = 0;                        // Fourth+
-}
+    let points = 0;
+    if (isCorrect) {
+      const correctAnswers = answersForThisQuestion.filter(
+        p => p.answers?.[room.currentQuestion]?.correct
+      );
+      const position = correctAnswers.length;
+      
+      // Award points: 1st=100, 2nd=25, 3rd=10, 4th+=0
+      if (position === 0) points = 100;
+      else if (position === 1) points = 25;
+      else if (position === 2) points = 10;
+      else points = 0;
+    }
 
     // Update player's answer and score
     const playerRef = ref(database, `rooms/${roomCode}/players/${playerId}`);
@@ -141,6 +165,10 @@ if (isCorrect) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-500 via-red-500 to-amber-600 p-4">
+      {/* Audio elements for sound effects */}
+      <audio ref={correctSoundRef} src="/correct.mp3" />
+      <audio ref={wrongSoundRef} src="/wrong.mp3" />
+      
       <div className="max-w-md mx-auto">
         {/* Player Info */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-4">
@@ -173,6 +201,28 @@ if (isCorrect) {
         {/* Active Game */}
         {room.status === 'active' && currentQuestion && (
           <div className="bg-white rounded-xl shadow-lg p-6">
+            {/* Countdown Timer on Player Phone */}
+            {!hasAnswered && (
+              <div className="mb-6">
+                <div className="text-center mb-2">
+                  <div className={`text-5xl font-bold ${
+                    timeLeft <= 5 ? 'text-red-600 animate-pulse' : 'text-orange-600'
+                  }`}>
+                    {timeLeft}s
+                  </div>
+                  <div className="text-gray-600 text-sm">Time Remaining</div>
+                </div>
+                <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className={`h-full transition-all duration-1000 ${
+                      timeLeft <= 5 ? 'bg-red-500' : 'bg-orange-500'
+                    }`}
+                    style={{ width: `${(timeLeft / 30) * 100}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="text-center mb-6">
               <div className="text-orange-600 font-bold mb-2">
                 Question {room.currentQuestion + 1} of 20

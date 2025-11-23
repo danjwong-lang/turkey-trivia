@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ref, get, set } from 'firebase/database';
 import { database } from '@/lib/firebase';
 
+const MAX_PLAYERS = 15;
+
 export default function JoinRoom() {
   const searchParams = useSearchParams();
   const [roomCode, setRoomCode] = useState('');
@@ -37,6 +39,23 @@ export default function JoinRoom() {
 
       if (!snapshot.exists()) {
         setError('Room not found. Check the code and try again.');
+        setJoining(false);
+        return;
+      }
+
+      const roomData = snapshot.val();
+
+      // Check if room is full
+      const currentPlayers = Object.keys(roomData.players || {}).length;
+      if (currentPlayers >= MAX_PLAYERS) {
+        setError(`Room is full! Maximum ${MAX_PLAYERS} players allowed.`);
+        setJoining(false);
+        return;
+      }
+
+      // Check if game already started
+      if (roomData.status !== 'lobby') {
+        setError('Game already started. Please wait for the next round.');
         setJoining(false);
         return;
       }
