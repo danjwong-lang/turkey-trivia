@@ -38,6 +38,7 @@ export default function PlayRoom() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [timeLeft, setTimeLeft] = useState(20);
   const correctSoundRef = useRef<HTMLAudioElement | null>(null);
   const wrongSoundRef = useRef<HTMLAudioElement | null>(null);
@@ -54,9 +55,11 @@ export default function PlayRoom() {
         if (playerId && data.players[playerId]?.answers?.[data.currentQuestion]) {
           setHasAnswered(true);
           setSelectedAnswer(data.players[playerId].answers[data.currentQuestion].answer);
+          setSubmitting(false);
         } else {
           setHasAnswered(false);
           setSelectedAnswer(null);
+          setSubmitting(false);
         }
       }
     });
@@ -92,13 +95,21 @@ export default function PlayRoom() {
   }, [room?.status, room?.questionStartTime, hasAnswered]);
 
   const submitAnswer = async (answer: string) => {
-    if (!room || !playerId || hasAnswered) return;
+    if (!room || !playerId || hasAnswered || submitting) return;
+
+    setSubmitting(true);
 
     const currentQuestion = room.selectedQuestions?.[room.currentQuestion];
-    if (!currentQuestion) return;
+    if (!currentQuestion) {
+      setSubmitting(false);
+      return;
+    }
 
     const question = questions.find(q => q.id === currentQuestion);
-    if (!question) return;
+    if (!question) {
+      setSubmitting(false);
+      return;
+    }
 
     const isCorrect = answer === question.correct;
     const timestamp = Date.now();
@@ -133,22 +144,27 @@ export default function PlayRoom() {
       else points = 0;
     }
 
-    // Update player's answer and score
-    const playerRef = ref(database, `rooms/${roomCode}/players/${playerId}`);
-    const currentPlayer = room.players[playerId];
-    
-    await update(playerRef, {
-      [`answers/${room.currentQuestion}`]: {
-        answer,
-        correct: isCorrect,
-        timestamp,
-        points
-      },
-      score: (currentPlayer?.score || 0) + points
-    });
+    try {
+      // Update player's answer and score
+      const playerRef = ref(database, `rooms/${roomCode}/players/${playerId}`);
+      const currentPlayer = room.players[playerId];
+      
+      await update(playerRef, {
+        [`answers/${room.currentQuestion}`]: {
+          answer,
+          correct: isCorrect,
+          timestamp,
+          points
+        },
+        score: (currentPlayer?.score || 0) + points
+      });
 
-    setSelectedAnswer(answer);
-    setHasAnswered(true);
+      setSelectedAnswer(answer);
+      setHasAnswered(true);
+    } catch (error) {
+      console.error('Error submitting answer:', error);
+      setSubmitting(false);
+    }
   };
 
   if (!room || !playerId) {
@@ -238,7 +254,8 @@ export default function PlayRoom() {
                   <button
                     key={key}
                     onClick={() => submitAnswer(key)}
-                    className={`w-full p-6 rounded-xl font-bold text-xl transition-all transform active:scale-95 ${
+                    disabled={submitting}
+                    className={`w-full p-6 rounded-xl font-bold text-xl transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
                       key === 'a' ? 'bg-red-500 hover:bg-red-600 text-white' :
                       key === 'b' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
                       key === 'c' ? 'bg-green-500 hover:bg-green-600 text-white' :
@@ -246,7 +263,7 @@ export default function PlayRoom() {
                     }`}
                   >
                     <div className="text-sm mb-1">{key.toUpperCase()}</div>
-                    <div>{value}</div>
+                    <div>{submitting && selectedAnswer === key ? 'Submitting...' : value}</div>
                   </button>
                 ))}
               </div>
