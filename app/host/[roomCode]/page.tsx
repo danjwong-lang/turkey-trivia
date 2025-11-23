@@ -8,3 +8,11 @@ const startGame = async () => {
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     const selectedQuestions = shuffled.slice(0, 20).map(q => q.id);
+
+    await update(ref(database, `rooms/${roomCode}`), {
+      status: 'active',
+      currentQuestion: 0,
+      selectedQuestions,
+      questionStartTime: Date.now()
+    });
+  };
