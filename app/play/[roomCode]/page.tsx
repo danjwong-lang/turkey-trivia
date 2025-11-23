@@ -38,8 +38,7 @@ export default function PlayRoom() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [hasAnswered, setHasAnswered] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(20);
+  const [timeLeft, setTimeLeft] = useState(30);
   const correctSoundRef = useRef<HTMLAudioElement | null>(null);
   const wrongSoundRef = useRef<HTMLAudioElement | null>(null);
 
@@ -55,11 +54,9 @@ export default function PlayRoom() {
         if (playerId && data.players[playerId]?.answers?.[data.currentQuestion]) {
           setHasAnswered(true);
           setSelectedAnswer(data.players[playerId].answers[data.currentQuestion].answer);
-          setSubmitting(false);
         } else {
           setHasAnswered(false);
           setSelectedAnswer(null);
-          setSubmitting(false);
         }
       }
     });
@@ -86,7 +83,7 @@ export default function PlayRoom() {
     if (room?.status === 'active' && !hasAnswered && room.questionStartTime) {
       const interval = setInterval(() => {
         const elapsed = Math.floor((Date.now() - room.questionStartTime!) / 1000);
-        const remaining = Math.max(20 - elapsed, 0);
+        const remaining = Math.max(30 - elapsed, 0);
         setTimeLeft(remaining);
       }, 100);
 
@@ -95,21 +92,13 @@ export default function PlayRoom() {
   }, [room?.status, room?.questionStartTime, hasAnswered]);
 
   const submitAnswer = async (answer: string) => {
-    if (!room || !playerId || hasAnswered || submitting) return;
-
-    setSubmitting(true);
+    if (!room || !playerId || hasAnswered) return;
 
     const currentQuestion = room.selectedQuestions?.[room.currentQuestion];
-    if (!currentQuestion) {
-      setSubmitting(false);
-      return;
-    }
+    if (!currentQuestion) return;
 
     const question = questions.find(q => q.id === currentQuestion);
-    if (!question) {
-      setSubmitting(false);
-      return;
-    }
+    if (!question) return;
 
     const isCorrect = answer === question.correct;
     const timestamp = Date.now();
@@ -144,27 +133,22 @@ export default function PlayRoom() {
       else points = 0;
     }
 
-    try {
-      // Update player's answer and score
-      const playerRef = ref(database, `rooms/${roomCode}/players/${playerId}`);
-      const currentPlayer = room.players[playerId];
-      
-      await update(playerRef, {
-        [`answers/${room.currentQuestion}`]: {
-          answer,
-          correct: isCorrect,
-          timestamp,
-          points
-        },
-        score: (currentPlayer?.score || 0) + points
-      });
+    // Update player's answer and score
+    const playerRef = ref(database, `rooms/${roomCode}/players/${playerId}`);
+    const currentPlayer = room.players[playerId];
+    
+    await update(playerRef, {
+      [`answers/${room.currentQuestion}`]: {
+        answer,
+        correct: isCorrect,
+        timestamp,
+        points
+      },
+      score: (currentPlayer?.score || 0) + points
+    });
 
-      setSelectedAnswer(answer);
-      setHasAnswered(true);
-    } catch (error) {
-      console.error('Error submitting answer:', error);
-      setSubmitting(false);
-    }
+    setSelectedAnswer(answer);
+    setHasAnswered(true);
   };
 
   if (!room || !playerId) {
@@ -233,7 +217,7 @@ export default function PlayRoom() {
                     className={`h-full transition-all duration-1000 ${
                       timeLeft <= 5 ? 'bg-red-500' : 'bg-orange-500'
                     }`}
-                    style={{ width: `${(timeLeft / 20) * 100}%` }}
+                    style={{ width: `${(timeLeft / 30) * 100}%` }}
                   />
                 </div>
               </div>
@@ -254,8 +238,7 @@ export default function PlayRoom() {
                   <button
                     key={key}
                     onClick={() => submitAnswer(key)}
-                    disabled={submitting}
-                    className={`w-full p-6 rounded-xl font-bold text-xl transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`w-full p-6 rounded-xl font-bold text-xl transition-all transform active:scale-95 ${
                       key === 'a' ? 'bg-red-500 hover:bg-red-600 text-white' :
                       key === 'b' ? 'bg-blue-500 hover:bg-blue-600 text-white' :
                       key === 'c' ? 'bg-green-500 hover:bg-green-600 text-white' :
@@ -263,7 +246,7 @@ export default function PlayRoom() {
                     }`}
                   >
                     <div className="text-sm mb-1">{key.toUpperCase()}</div>
-                    <div>{submitting && selectedAnswer === key ? 'Submitting...' : value}</div>
+                    <div>{value}</div>
                   </button>
                 ))}
               </div>
