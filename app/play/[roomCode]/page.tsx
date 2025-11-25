@@ -111,27 +111,22 @@ export default function PlayRoom() {
     }
 
     // Calculate points based on speed
-    const players = Object.values(room.players || {});
-    const answersForThisQuestion = players
-      .filter(p => p.answers?.[room.currentQuestion])
-      .sort((a, b) => 
-        (a.answers?.[room.currentQuestion]?.timestamp || 0) - 
-        (b.answers?.[room.currentQuestion]?.timestamp || 0)
-      );
-
-    let points = 0;
-    if (isCorrect) {
-      const correctAnswers = answersForThisQuestion.filter(
-        p => p.answers?.[room.currentQuestion]?.correct
-      );
-      const position = correctAnswers.length;
-      
-      // Award points: 1st=100, 2nd=25, 3rd=10, 4th+=0
-      if (position === 0) points = 100;
-      else if (position === 1) points = 25;
-      else if (position === 2) points = 10;
-      else points = 0;
-    }
+let points = 0;
+if (isCorrect) {
+  const players = Object.values(room.players || {});
+  
+  // Count how many correct answers were submitted BEFORE this timestamp
+  const correctAnswersBefore = players.filter(p => {
+    const ans = p.answers?.[room.currentQuestion];
+    return ans?.correct && ans.timestamp < timestamp;
+  }).length;
+  
+  // Award points: 1st=100, 2nd=25, 3rd=10, 4th+=0
+  if (correctAnswersBefore === 0) points = 100;
+  else if (correctAnswersBefore === 1) points = 25;
+  else if (correctAnswersBefore === 2) points = 10;
+  else points = 0;
+}
 
     // Update player's answer and score
     const playerRef = ref(database, `rooms/${roomCode}/players/${playerId}`);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { ref, onValue, update, get } from 'firebase/database';
 import { database } from '@/lib/firebase';
@@ -35,6 +35,7 @@ const MAX_PLAYERS = 15;
 
 export default function HostRoom() {
   const params = useParams();
+const router = useRouter();
   const roomCode = params.roomCode as string;
   const [room, setRoom] = useState<Room | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -130,19 +131,25 @@ export default function HostRoom() {
   }, [room?.status, room?.questionStartTime, showResults]);
 
   const startGame = async () => {
-    if (!questions.length) return;
-
-    // Select 20 random questions
-    const shuffled = [...questions].sort(() => Math.random() - 0.5);
-    const selectedQuestions = shuffled.slice(0, 20).map(q => q.id);
-
-    await update(ref(database, `rooms/${roomCode}`), {
-      status: 'active',
-      currentQuestion: 0,
-      selectedQuestions,
-      questionStartTime: Date.now()
-    });
-  };
+  if (!questions.length) return;
+  
+  // Fisher-Yates shuffle - guarantees proper randomization
+  const shuffled = [...questions];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  // Take first 20 - guaranteed unique since we're slicing from shuffled array
+  const selectedQuestions = shuffled.slice(0, 20).map(q => q.id);
+  
+  await update(ref(database, `rooms/${roomCode}`), {
+    status: 'active',
+    currentQuestion: 0,
+    selectedQuestions,
+    questionStartTime: Date.now()
+  });
+};
 
   const nextQuestion = async () => {
     if (!room) return;
@@ -490,7 +497,7 @@ export default function HostRoom() {
             </div>
 
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => router.push('/')}
               className="bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-8 rounded-xl text-xl transition-colors"
             >
               Play Again
